@@ -1,13 +1,13 @@
 ---
+title: "Machine learning 1"
+author: "Hope Adams"
+date: 10/21/2021
 output:
   pdf_document: default
   html_document: default
 ---
----
-title: "Machine learning 1"
-author: "Hope Adams"
-date: 10/21/2021
-output: pdf_document
+
+
 
 # Kmeans clustering
 
@@ -111,7 +111,7 @@ ncol(x)
 
 Look at data imported:
 ```{r}
-View(x)
+#View(x)
 ```
 Have 5 columns when we should have 4.
 We need to take "x" (first column) out of column numbering 
