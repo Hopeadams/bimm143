@@ -1,0 +1,248 @@
+---
+title: "class15_bimm143"
+author: 'Hope (PID: A15652616)'
+date: "11/16/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Background
+Our data for today comes from Himes et. al. RNA seq analysis of the drug dexamethasone, a synthetic glucocorticoid steroid with anti-inflammatory effects (Himes et al. 2014).
+
+Read the countData and colData
+
+```{r}
+counts <- read.csv("airway_scaledcounts.csv", row.names=1)
+metadata <-  read.csv("airway_metadata.csv")
+```
+
+Let's have a look at these
+
+```{r}
+head(counts)
+```
+
+```{r}
+metadata
+```
+
+# Q1. How many genes are in this dataset? 
+```{r}
+nrow(counts)
+```
+38694 
+
+# Q2. How many ‘control’ cell lines do we have? 
+```{r}
+sum(metadata$dex =="control")
+```
+4 
+
+
+First I need to extract all of the "control" columns. Then I need to take the row wise mean to get the average count values for all genes in these four experiments. 
+```{r}
+control.inds <- metadata$dex == "control"
+control.counts <- counts[, control.inds]
+head(control.counts)
+```
+
+```{r}
+control.mean <- rowMeans(control.counts)
+```
+
+We now have to do the same with the treated data
+```{r}
+treated.inds <- metadata$dex == "treated"
+treated.counts <- counts[, treated.inds]
+head(treated.counts) 
+treated.mean <- rowMeans(treated.counts)
+```
+
+# Q3. How would you make the above code in either approach more robust?
+
+# Q4. Follow the same procedure for the treated samples (i.e. calculate the mean per gene across drug treated samples and assign to a labeled vector called treated.mean)
+
+We must combine out mean count data for bookkeeping purposes 
+```{r}
+meancounts <- data.frame(control.mean, treated.mean) 
+```
+
+
+# Q5 (a). Create a scatter plot showing the mean of the treated samples against the mean of the control samples. Your plot should look something like the following.
+Make a plot of control vs treated
+```{r}
+plot(meancounts)
+```
+
+# Q5 (b).You could also use the ggplot2 package to make this figure producing the plot below. What geom_?() function would you use for this plot? 
+geom_point
+
+
+# Q6. Try plotting both axes on a log scale. What is the argument to plot() that allows you to do this?
+meancounts, log="xy"
+
+```{r}
+plot(meancounts, log="xy")
+```
+
+We often use log2 in this field because it has nice math properties that make interpretation easier
+
+```{r}
+log2(10/10)
+```
+
+```{r}
+log2(20/10)
+```
+
+```{r}
+log2(40/10)
+```
+
+```{r}
+log2(5/10)
+```
+
+We see 0 values for no change, + values for increases and - values for decreases. This nice property leads us to work with **log2(fold-change)** all the time in genomics and proteomics filed. 
+
+Let's add the **log2(fold-change)** values to our 'meancounts' dataframe.
+```{r}
+meancounts$log2fc <- log2(meancounts[,"treated.mean"]/meancounts[,"control.mean"])
+head(meancounts)
+```
+
+We see some infinities in the data so we need to exclude the genes with zero counts because we can't say anything about these since we have no data with them. 
+```{r}
+head(meancounts[,1:2] ==0)
+```
+I can use the **which()** function with the 'arr.ind=TRUE' argument to get the columns and rows where the TRUE values are (i.e. the zero counts)
+
+```{r}
+zero.vals <- which(meancounts[,1:2] ==0, arr.ind = TRUE)
+head(zero.vals) 
+```
+
+
+```{r}
+to.rm <- unique(zero.vals[, "row"])
+head(sort(to.rm))
+```
+
+# Q7. What is the purpose of the arr.ind argument in the which() function call above? Why would we then take the first column of the output and need to call the unique() function?
+The arr.ind will with which() will return rows and columns showing where TRUE values are(aka zeros in out data). We use the unique function so we only count zeros in the rows and not also the columns.
+
+
+Now we can remove these from our 'meancounts' dataframe.
+
+```{r}
+head(meancounts)
+```
+
+
+```{r}
+mycounts <- meancounts[-to.rm,]
+head(mycounts) 
+```
+
+How many genes are left?
+```{r}
+nrow(mycounts)
+```
+
+```{r}
+up.ind <- sum(mycounts$log2fc > 2)
+up.ind
+```
+
+```{r}
+down.ind <- sum(mycounts$log2fc < (-2))
+down.ind
+```
+
+# Q8. Using the up.ind vector above can you determine how many up regulated genes we have at the greater than 2 fc level? 
+250
+# Q9. Using the down.ind vector above can you determine how many down regulated genes we have at the greater than 2 fc level? 
+367
+# Q10. Do you trust these results? Why or why not?
+We shouldn't trust these results because we aren't accounting for fold changes and significance. These fold changes can be very large without being statistically significant and we need to consider significance with our data.
+
+
+## DeSEQ Analysis
+
+Lets do this the right way. DESeq2 is an R-package specifically for analyzing count based NGS data like RNA-seq. It is available in dds
+
+```{r}
+library(DESeq2)
+citation("DESeq2")
+```
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData=counts, 
+                              colData=metadata, 
+                              design=~dex)
+dds
+
+```
+
+Now we can run DESeq analysis
+
+```{r}
+dds <- DESeq(dds)
+```
+
+To get the results here we use the DESeq 'results()' function: 
+```{r}
+res <- results(dds)
+res
+```
+
+
+## Make a Volcano plot
+Let’s make a commonly produced visualization from this data, namely a so-called Volcano plot. These summary figures are frequently used to highlight the proportion of genes that are both significantly regulated and display a high fold change.
+
+Let's use base R
+```{r}
+plot(res$log2FoldChange, res$padj)
+```
+
+Not useful because all smaller p-values are hidden at the bottom of the plot and we can't see them very well. Log helps.
+```{r}
+plot(res$log2FoldChange, log(res$padj))
+```
+
+We can use -log to flip the p-value.
+```{r}
+plot(res$log2FoldChange, -log(res$padj))
+```
+
+Now let's add some labels and colors to the plot to draw attention to the genes (points on the graph) we care about. These are the ones that have large fold-changes and low p-values (i.e. high -log(pvalues)). We will also add some guidelines that clearly define the fold change of +/- 2 and the 0.05 p-value.
+
+```{r}
+ plot(res$log2FoldChange, -log(res$padj))
+abline(v=c(-2, +2), col="gray")
+abline(h=-log(0.05), col="gray")
+```
+
+Now we need to set up the colors for the point that land in each of the quadrants the guidelines made for us.
+```{r}
+mycols <- rep("gray", nrow(res))
+mycols[ abs(res$log2FoldChange) > 2 ]  <- "red" 
+```
+
+Add this to the plot
+```{r}
+ plot(res$log2FoldChange, -log(res$padj), col=mycols)
+abline(v=c(-2, +2), col="gray")
+abline(h=-log(0.05), col="gray")
+mycols <- rep("gray", nrow(res))
+mycols[ abs(res$log2FoldChange) > 2 ]  <- "red" 
+mycols[abs(res$padj)> 0.05] <- "gray"
+```
+
+
+
+
+
+
+
