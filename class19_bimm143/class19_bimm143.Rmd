@@ -1,0 +1,53 @@
+---
+title: "class19_bimm143"
+author: 'Hope (PID: A15652616)'
+date: "12/5/2021"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Section 4: Population Scale Analysis
+
+How many samples do we have?
+```{r}
+expr <- read.table("rs8067378_ENSG00000172057.6.txt")
+head(expr)
+```
+
+```{r}
+nrow(expr)
+```
+
+We have 462 samples in the data. 
+
+What if we want to know the number of each type?
+```{r}
+table(expr$geno)
+```
+Now we can see there are 108 A/A, 233 A/G, and 121 G/G
+
+Now we want to make a summary figure of the data using ggplot:
+```{r}
+library(ggplot2)
+```
+
+
+We are making a boxplot: 
+```{r}
+med <- aggregate(exp ~  geno, expr, median)
+ggplot(expr) + aes(geno, exp, fill=geno) + geom_boxplot(notch = TRUE) + geom_text(data = med, aes(label = exp, y = exp + 2))
+
+```
+
+I made a table for the median values to show in the box plot. I am going to show the table:
+```{r}
+med
+```
+The medians were found above.
+
+# Question 14: what could you infer from the relative expression value between A/A and G/G displayed in this plot? Does the SNP effect the expression of ORMDL3?
+There seems to be greater expression of ORMDL3 in A/A genotypes than G/G genotypes based on the median alone but the data overall in the boxplot mostly  overlaps with each other so it's hard to say for sure. 
+
+
+
