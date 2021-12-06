@@ -1,0 +1,90 @@
+---
+title: "findagene_bimm143"
+author: 'Hope (PID: A15652616)'
+date: "12/1/2021"
+output: pdf_document
+---
+
+```{r}
+library(bio3d)
+```
+
+```{r}
+alignment <- read.fasta(file="fastaformat.fst", rm.dup = TRUE, to.upper = FALSE, to.dash = TRUE)
+```
+
+```{r}
+peridentity <- seqidentity(alignment, normalize = TRUE, similarity = FALSE, ncore = 1, nseg.scale = 1)
+```
+
+```{r}
+heatmap(peridentity, cexRow = 0.5, cexCol = 0.5, margins = c(5,5))
+```
+
+```{r}
+gallusseq <- "gallusseq.txt.fst"
+```
+
+```{r}
+?pdb.annotate
+```
+
+```{r}
+blast.pdb(read.fasta(gallusseq), database = "pdb",time.out = NULL)
+```
+
+```{r}
+sparrowseq <- "whitesparrow.fasta.fst"
+```
+
+```{r}
+blast.pdb(read.fasta(sparrowseq), database="pdb", time.out=NULL)
+```
+
+```{r}
+testids <- c("4ZCA_A", "1II6_A", "6TLE_A", "5ZO7_A", "3B6V_A", "7NB8_K", "1IA0_K", "2WBE_C")
+```
+
+```{r}
+pdb.annotate(testids)
+```
+
+```{r}
+ids <- c("4ZCA_A", "1IA0_K", "2WBE_C")
+```
+
+```{r}
+pdb.annotate(ids)
+```
+
+```{r}
+id2 <- "6TA3_K"
+```
+
+```{r}
+pdb.annotate(id2)
+```
+
+```{r}
+ant <- "antsequence.fasta"
+```
+
+```{r}
+blast.pdb(read.fasta(ant), database="pdb", time.out = NULL)
+```
+
+```{r}
+aneltestids <- c("6BY9_A", "3UZ0_B", "5KJD_A", "2BIW_A", "6C7K_A", "1Z9D_A", "6C7O_A", "2BIW_A")
+```
+
+```{r}
+pdb.annotate(aneltestids)
+```
+
+
+
+
+
+
+
+
