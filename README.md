@@ -13,3 +13,4 @@ This is a showcase of my work for this class.
 - Transcriptomics and the analysis of RNA-Seq data [source](https://github.com/Hopeadams/bimm143/blob/main/class15_bimm143/class15_bimm143.pdf)
 - Vaccination rate mini project using ggplot and dplyr [source](https://github.com/Hopeadams/bimm143/blob/main/class17_bimm143/class17_bimm143.pdf)
 - Genome informatics [source](https://github.com/Hopeadams/bimm143/blob/main/class19_bimm143/lab19ws_bimm143.pdf)
+- Find a gene project [source](https://github.com/Hopeadams/bimm143/blob/main/findagene_bimm143/BIMM%20143%20Find%20a%20project.pdf)
